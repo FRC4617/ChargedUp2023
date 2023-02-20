@@ -5,22 +5,20 @@ import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 import edu.wpi.first.math.filter.SlewRateLimiter;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.sensors.MPU6050;
 
 public class Drivetrain extends SubsystemBase {
 
-        private final byte MPU6050_ADRESS = 0x68;
-        private final int REGISTER_PWR_MGMT_1 = 0x6B;
-        private final byte REGISTER_GYRO = 0x43;
-
-        private I2C accelerometer = new I2C(I2C.Port.kOnboard, MPU6050_ADRESS);
-        private byte[] buffer = new byte[6];
-
         private final DifferentialDrive drive;
+
+        private final byte MPU6050_ADDRESS = 0x68;
+        private final MPU6050 gyro = new MPU6050(MPU6050_ADDRESS);
 
         private final CANSparkMax leftMainMotor = new CANSparkMax(Constants.DriveConstants.kLeftMainMotor,
                         MotorType.kBrushless);
@@ -70,8 +68,6 @@ public class Drivetrain extends SubsystemBase {
                 rightFollowerMotor2.setIdleMode(IdleMode.kCoast);
 
                 drive = new DifferentialDrive(leftMainMotor, rightMainMotor);
-
-                accelerometer.write(REGISTER_PWR_MGMT_1, 0);
         }
 
         public void arcadeDrive(double xSpeed, double zRotation, boolean isQuickTurn) {
@@ -84,22 +80,15 @@ public class Drivetrain extends SubsystemBase {
                 SmartDashboard.putNumber("Left Speed", leftMainMotor.getAppliedOutput());
                 SmartDashboard.putNumber("Right Speed", rightMainMotor.getAppliedOutput());
 
-                accelerometer.read(REGISTER_GYRO, 6, buffer);
+                Rotation2d x = gyro.getRotationX();
+                Rotation2d y = gyro.getRotationY();
+                Rotation2d z = gyro.getRotationZ();
 
-                // System.out.print("Data: ");
-                // for (int i = 0; i < buffer.length; i++) {
-                //         System.out.print(buffer[i]);
-                //         System.out.print(", ");
-                // }
-                // System.out.println();
+                gyro.printAllData();
 
-                int x = (buffer[0] << 8) | buffer[1];
-                int y = (buffer[2] << 8) | buffer[3];
-                int z = (buffer[4] << 8) | buffer[5];
-
-                SmartDashboard.putNumber("X", x);
-                SmartDashboard.putNumber("Y", y);
-                SmartDashboard.putNumber("Z", z);
+                SmartDashboard.putNumber("X", x.getDegrees());
+                SmartDashboard.putNumber("Y", y.getDegrees());
+                SmartDashboard.putNumber("Z", z.getDegrees());
         }
 
         public static Drivetrain getInstance() {
