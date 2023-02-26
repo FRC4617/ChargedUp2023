@@ -1,6 +1,8 @@
 package frc.robot.subsystems;
 
+import com.revrobotics.CANEncoder;
 import com.revrobotics.CANSparkMax;
+import com.revrobotics.RelativeEncoder;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
@@ -23,6 +25,9 @@ public class Drivetrain extends SubsystemBase {
                         MotorType.kBrushless);
         private final CANSparkMax rightMainMotor = new CANSparkMax(Constants.DriveConstants.kRightMainMotor,
                         MotorType.kBrushless);
+
+        private final RelativeEncoder leftEncoder = leftMainMotor.getEncoder();
+        private final RelativeEncoder rightEncoder = rightMainMotor.getEncoder();
 
         private final CANSparkMax leftFollowerMotor1 = new CANSparkMax(Constants.DriveConstants.kLeftFollowerMotor1,
                         MotorType.kBrushless);
@@ -88,6 +93,10 @@ public class Drivetrain extends SubsystemBase {
                 SmartDashboard.putNumber("X", x.getDegrees());
                 SmartDashboard.putNumber("Y", y.getDegrees());
                 SmartDashboard.putNumber("Z", z.getDegrees());
+
+                SmartDashboard.putNumber("Left Encoder Position", leftEncoder.getPosition());
+                SmartDashboard.putNumber("Right Encoder Position", rightEncoder.getPosition());
+
         }
 
         public static Drivetrain getInstance() {
@@ -98,6 +107,6 @@ public class Drivetrain extends SubsystemBase {
 
         public void stop() {
                 drive.stopMotor();
-              }
-            
+        }
+
 }
