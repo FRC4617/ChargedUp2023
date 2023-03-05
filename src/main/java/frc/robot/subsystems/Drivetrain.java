@@ -1,5 +1,8 @@
 package frc.robot.subsystems;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+
 import com.revrobotics.CANEncoder;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
@@ -9,12 +12,18 @@ import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
+import edu.wpi.first.wpilibj.interfaces.Gyro;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.RobotContainer;
 import frc.robot.sensors.MPU6050;
+import frc.robot.commands.ArcadeDrive;
+
 
 public class Drivetrain extends SubsystemBase {
+
+        public double[] xData = {0,0,0,0,0};
 
         private final DifferentialDrive drive;
 
@@ -26,8 +35,8 @@ public class Drivetrain extends SubsystemBase {
         private final CANSparkMax rightMainMotor = new CANSparkMax(Constants.DriveConstants.kRightMainMotor,
                         MotorType.kBrushless);
 
-        private final RelativeEncoder leftEncoder = leftMainMotor.getEncoder();
-        private final RelativeEncoder rightEncoder = rightMainMotor.getEncoder();
+        public final RelativeEncoder leftEncoder = leftMainMotor.getEncoder();
+        public final RelativeEncoder rightEncoder = rightMainMotor.getEncoder();
 
         private final CANSparkMax leftFollowerMotor1 = new CANSparkMax(Constants.DriveConstants.kLeftFollowerMotor1,
                         MotorType.kBrushless);
@@ -44,6 +53,8 @@ public class Drivetrain extends SubsystemBase {
 
         private static Drivetrain instance;
 
+
+
         private Drivetrain() {
                 leftMainMotor.restoreFactoryDefaults();
                 rightMainMotor.restoreFactoryDefaults();
@@ -57,7 +68,7 @@ public class Drivetrain extends SubsystemBase {
 
                 rightFollowerMotor1.follow(rightMainMotor);
                 rightFollowerMotor2.follow(rightMainMotor);
-
+ 
                 leftMainMotor.setInverted(true);
                 leftFollowerMotor1.setInverted(true);
                 leftFollowerMotor2.setInverted(true);
@@ -75,7 +86,7 @@ public class Drivetrain extends SubsystemBase {
         }
 
         public void arcadeDrive(double xSpeed, double zRotation, boolean isQuickTurn) {
-                drive.curvatureDrive(xLimiter.calculate(xSpeed), zLimiter.calculate(zRotation), isQuickTurn);
+                drive.curvatureDrive(xLimiter.calculate(xSpeed*0.25), zLimiter.calculate(zRotation*0.25), isQuickTurn);
                 drive.feed();
         }
 
@@ -94,10 +105,27 @@ public class Drivetrain extends SubsystemBase {
                 SmartDashboard.putNumber("Y", y.getDegrees());
                 SmartDashboard.putNumber("Z", z.getDegrees());
 
+                
                 SmartDashboard.putNumber("Left Encoder Position", leftEncoder.getPosition());
                 SmartDashboard.putNumber("Right Encoder Position", rightEncoder.getPosition());
 
+                SmartDashboard.putNumber("Distance", rightEncoder.getPositionConversionFactor()+leftEncoder.getPositionConversionFactor());
+
         }
+
+
+        public static double avgX(){
+           
+
+                return 0;
+        }
+
+        public void resetEncoders(){
+               rightEncoder.setPosition(0);
+               leftEncoder.setPosition(0);
+
+        }
+
 
         public static Drivetrain getInstance() {
                 if (instance == null)

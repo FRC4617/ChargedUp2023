@@ -22,6 +22,11 @@ public class ArcadeDrive extends CommandBase {
 
     @Override
     public void execute() {
+      if(RobotContainer.k_driver.getBButtonPressed()){
+        drivetrain.resetEncoders();
+      }
+
+
         double x = RobotContainer.k_driver.getRawAxis(4);
         double y = RobotContainer.k_driver.getRawAxis(1);
     
