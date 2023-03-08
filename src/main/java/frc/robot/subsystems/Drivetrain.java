@@ -1,42 +1,54 @@
 package frc.robot.subsystems;
 
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.List;
 
-import com.revrobotics.CANEncoder;
+import com.kauailabs.navx.frc.AHRS;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.RamseteController;
+import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.filter.SlewRateLimiter;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
+import edu.wpi.first.math.kinematics.DifferentialDriveWheelSpeeds;
+import edu.wpi.first.math.trajectory.Trajectory;
+import edu.wpi.first.math.trajectory.TrajectoryConfig;
+import edu.wpi.first.math.trajectory.TrajectoryGenerator;
+import edu.wpi.first.math.trajectory.constraint.DifferentialDriveVoltageConstraint;
+import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
-import edu.wpi.first.wpilibj.interfaces.Gyro;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.RamseteCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
-import frc.robot.RobotContainer;
-import frc.robot.sensors.MPU6050;
-import frc.robot.commands.ArcadeDrive;
-
+import frc.robot.Constants.DriveConstants;
 
 public class Drivetrain extends SubsystemBase {
 
-        public double[] xData = {0,0,0,0,0};
+        public double xData[] = { 0, 0, 0, 0, 0 };
+        public double xWeight[] = { .5, .7, 1, .7, .5 };
 
         private final DifferentialDrive drive;
 
-        private final byte MPU6050_ADDRESS = 0x68;
-        private final MPU6050 gyro = new MPU6050(MPU6050_ADDRESS);
+        // Odometry class for tracking robot pose
+        private final DifferentialDriveOdometry odometry;
+
+        private final AHRS gyro;
 
         private final CANSparkMax leftMainMotor = new CANSparkMax(Constants.DriveConstants.kLeftMainMotor,
                         MotorType.kBrushless);
         private final CANSparkMax rightMainMotor = new CANSparkMax(Constants.DriveConstants.kRightMainMotor,
                         MotorType.kBrushless);
 
-        public final RelativeEncoder leftEncoder = leftMainMotor.getEncoder();
-        public final RelativeEncoder rightEncoder = rightMainMotor.getEncoder();
+        private final RelativeEncoder leftEncoder;
+        private final RelativeEncoder rightEncoder;
 
         private final CANSparkMax leftFollowerMotor1 = new CANSparkMax(Constants.DriveConstants.kLeftFollowerMotor1,
                         MotorType.kBrushless);
@@ -53,9 +65,11 @@ public class Drivetrain extends SubsystemBase {
 
         private static Drivetrain instance;
 
-
-
         private Drivetrain() {
+                gyro = new AHRS(SPI.Port.kMXP);
+
+                odometry = new DifferentialDriveOdometry(getAngle(), leftDistance(), rightDistance());
+
                 leftMainMotor.restoreFactoryDefaults();
                 rightMainMotor.restoreFactoryDefaults();
                 leftFollowerMotor1.restoreFactoryDefaults();
@@ -68,7 +82,7 @@ public class Drivetrain extends SubsystemBase {
 
                 rightFollowerMotor1.follow(rightMainMotor);
                 rightFollowerMotor2.follow(rightMainMotor);
- 
+
                 leftMainMotor.setInverted(true);
                 leftFollowerMotor1.setInverted(true);
                 leftFollowerMotor2.setInverted(true);
@@ -82,55 +96,170 @@ public class Drivetrain extends SubsystemBase {
                 rightFollowerMotor1.setIdleMode(IdleMode.kCoast);
                 rightFollowerMotor2.setIdleMode(IdleMode.kCoast);
 
+                leftEncoder = leftMainMotor.getEncoder();
+                rightEncoder = rightMainMotor.getEncoder();
+
+                leftEncoder.setInverted(true);
+                rightEncoder.setInverted(true);
+
                 drive = new DifferentialDrive(leftMainMotor, rightMainMotor);
         }
 
+        public Rotation2d getAngle() {
+                return Rotation2d.fromDegrees(-gyro.getYaw());
+        }
+
+        public void zeroAngle() {
+                gyro.reset();
+        }
+
+        public double leftDistance() {
+                return leftEncoder.getPosition() * (Constants.DriveConstants.kWheelCircumference
+                                / Constants.DriveConstants.kGearingRatio);
+        }
+
+        public double rightDistance() {
+                return rightEncoder.getPosition() * (Constants.DriveConstants.kWheelCircumference
+                                / Constants.DriveConstants.kGearingRatio);
+        }
+
         public void arcadeDrive(double xSpeed, double zRotation, boolean isQuickTurn) {
-                drive.curvatureDrive(xLimiter.calculate(xSpeed*0.25), zLimiter.calculate(zRotation*0.25), isQuickTurn);
+                drive.curvatureDrive(xLimiter.calculate(xSpeed), zLimiter.calculate(zRotation), isQuickTurn);
                 drive.feed();
+        }
+
+        public void resetEncoders() {
+                leftEncoder.setPosition(0);
+                rightEncoder.setPosition(0);
+        }
+
+        /**
+         * Returns the currently-estimated pose of the robot.
+         *
+         * @return The pose.
+         */
+        public Pose2d getPose() {
+                return odometry.getPoseMeters();
+        }
+
+        /**
+         * Controls the left and right sides of the drive directly with voltages.
+         *
+         * @param leftVolts  the commanded left output
+         * @param rightVolts the commanded right output
+         */
+        public void tankDriveVolts(double leftVolts, double rightVolts) {
+                leftMainMotor.setVoltage(leftVolts);
+                rightMainMotor.setVoltage(rightVolts);
         }
 
         @Override
         public void periodic() {
+
+                // Update the odometry in the periodic block
+                odometry.update(
+                                getAngle(), leftDistance(), rightDistance());
+
                 SmartDashboard.putNumber("Left Speed", leftMainMotor.getAppliedOutput());
                 SmartDashboard.putNumber("Right Speed", rightMainMotor.getAppliedOutput());
 
-                Rotation2d x = gyro.getRotationX();
-                Rotation2d y = gyro.getRotationY();
-                Rotation2d z = gyro.getRotationZ();
-
-                gyro.printAllData();
-
-                SmartDashboard.putNumber("X", x.getDegrees());
-                SmartDashboard.putNumber("Y", y.getDegrees());
-                SmartDashboard.putNumber("Z", z.getDegrees());
-
-                
                 SmartDashboard.putNumber("Left Encoder Position", leftEncoder.getPosition());
                 SmartDashboard.putNumber("Right Encoder Position", rightEncoder.getPosition());
 
-                SmartDashboard.putNumber("Distance", rightEncoder.getPositionConversionFactor()+leftEncoder.getPositionConversionFactor());
+                SmartDashboard.putNumber("Gyro", getAngle().getDegrees());
 
+                SmartDashboard.putNumber("Left Distance", leftDistance());
+                SmartDashboard.putNumber("Right Distance", rightDistance());
         }
 
-
-        public static double avgX(){
-           
-
-                return 0;
+        /**
+         * Returns the current wheel speeds of the robot.
+         *
+         * @return The current wheel speeds.
+         */
+        public DifferentialDriveWheelSpeeds getWheelSpeeds() {
+                return new DifferentialDriveWheelSpeeds(
+                                leftEncoder.getVelocity() * (Constants.DriveConstants.kWheelCircumference
+                                                / Constants.DriveConstants.kGearingRatio),
+                                rightEncoder.getVelocity() * (Constants.DriveConstants.kWheelCircumference
+                                                / Constants.DriveConstants.kGearingRatio));
         }
-
-        public void resetEncoders(){
-               rightEncoder.setPosition(0);
-               leftEncoder.setPosition(0);
-
-        }
-
 
         public static Drivetrain getInstance() {
                 if (instance == null)
                         instance = new Drivetrain();
                 return instance;
+        }
+
+        /**
+         * Resets the odometry to the specified pose.
+         *
+         * @param pose The pose to which to set the odometry.
+         */
+        public void resetOdometry(Pose2d pose) {
+                resetEncoders();
+                odometry.resetPosition(
+                                getAngle(), leftDistance(), rightDistance(),
+                                pose);
+        }
+
+        /**
+         * Use this to pass the autonomous command to the main {@link Robot} class.
+         *
+         * @return the command to run in autonomous
+         */
+        public Command getAutonomousCommand() {
+                // Create a voltage constraint to ensure we don't accelerate too fast
+                var autoVoltageConstraint = new DifferentialDriveVoltageConstraint(
+                                new SimpleMotorFeedforward(
+                                                DriveConstants.ksVolts,
+                                                DriveConstants.kvVoltSecondsPerMeter,
+                                                DriveConstants.kaVoltSecondsSquaredPerMeter),
+                                Constants.DriveConstants.kinematics,
+                                10);
+
+                // Create config for trajectory
+                TrajectoryConfig config = new TrajectoryConfig(
+                                Constants.DriveConstants.kMaxSpeedMetersPerSecond,
+                                Constants.DriveConstants.kMaxAccelerationMetersPerSecondSquared)
+                                // Add kinematics to ensure max speed is actually obeyed
+                                .setKinematics(Constants.DriveConstants.kinematics)
+                                // Apply the voltage constraint
+                                .addConstraint(autoVoltageConstraint);
+
+                // An example trajectory to follow. All units in meters.
+                Trajectory exampleTrajectory = TrajectoryGenerator.generateTrajectory(
+                                // Start at the origin facing the +X direction
+                                new Pose2d(0, 0, new Rotation2d(0)),
+                                // Pass through these two interior waypoints, making an 's' curve path
+                                List.of(new Translation2d(1, 1), new Translation2d(2, -1)),
+                                // End 3 meters straight ahead of where we started, facing forward
+                                new Pose2d(3, 0, new Rotation2d(0)),
+                                // Pass config
+                                config);
+
+                RamseteCommand ramseteCommand = new RamseteCommand(
+                                exampleTrajectory,
+                                this::getPose,
+                                new RamseteController(Constants.DriveConstants.kRamseteB,
+                                                Constants.DriveConstants.kRamseteZeta),
+                                new SimpleMotorFeedforward(
+                                                DriveConstants.ksVolts,
+                                                DriveConstants.kvVoltSecondsPerMeter,
+                                                DriveConstants.kaVoltSecondsSquaredPerMeter),
+                                Constants.DriveConstants.kinematics,
+                                this::getWheelSpeeds,
+                                new PIDController(DriveConstants.kPDriveVel, 0, 0),
+                                new PIDController(DriveConstants.kPDriveVel, 0, 0),
+                                // RamseteCommand passes volts to the callback
+                                this::tankDriveVolts,
+                                this);
+
+                // Reset odometry to the starting pose of the trajectory.
+                this.resetOdometry(exampleTrajectory.getInitialPose());
+
+                // Run path following command, then stop at the end.
+                return ramseteCommand.andThen(() -> this.tankDriveVolts(0, 0));
         }
 
         public void stop() {
