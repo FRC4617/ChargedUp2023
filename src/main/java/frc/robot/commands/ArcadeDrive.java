@@ -24,11 +24,10 @@ public class ArcadeDrive extends CommandBase {
   public void execute() {
     if (RobotContainer.k_driver.getBButtonPressed()) {
       drivetrain.resetEncoders();
-
     }
 
-    double x = RobotContainer.k_driver.getRawAxis(4);
-    double y = RobotContainer.k_driver.getRawAxis(1);
+    double x = -RobotContainer.k_driver.getRawAxis(4);
+    double y = -RobotContainer.k_driver.getRawAxis(1);
 
     if (Math.abs(x) <= 0.05) {
       x = 0;

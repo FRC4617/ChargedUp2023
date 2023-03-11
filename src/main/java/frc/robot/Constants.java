@@ -4,7 +4,6 @@
 
 package frc.robot;
 
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.DifferentialDriveKinematics;
 import edu.wpi.first.math.util.Units;
 
@@ -58,8 +57,8 @@ public final class Constants {
     public static final double kRamseteB = 2;
     public static final double kRamseteZeta = 0.7;
 
-    public static final double kGearingRatio = 8.45;
+    public static final double kGearingRatio = 12.75;
 
-    public static final double kWheelCircumference = Units.inchesToMeters(6) * 2 * Math.PI;
+    public static final double kWheelCircumference = Units.inchesToMeters(6) * Math.PI;
   }
 }

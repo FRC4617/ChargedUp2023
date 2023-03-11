@@ -63,12 +63,8 @@ public class Drivetrain extends SubsystemBase {
         private final SlewRateLimiter xLimiter = new SlewRateLimiter(0.75);
         private final SlewRateLimiter zLimiter = new SlewRateLimiter(0.75);
 
-        private static Drivetrain instance;
-
-        private Drivetrain() {
+        public Drivetrain() {
                 gyro = new AHRS(SPI.Port.kMXP);
-
-                odometry = new DifferentialDriveOdometry(getAngle(), leftDistance(), rightDistance());
 
                 leftMainMotor.restoreFactoryDefaults();
                 rightMainMotor.restoreFactoryDefaults();
@@ -83,9 +79,9 @@ public class Drivetrain extends SubsystemBase {
                 rightFollowerMotor1.follow(rightMainMotor);
                 rightFollowerMotor2.follow(rightMainMotor);
 
-                leftMainMotor.setInverted(true);
-                leftFollowerMotor1.setInverted(true);
-                leftFollowerMotor2.setInverted(true);
+                rightMainMotor.setInverted(true);
+                rightFollowerMotor1.setInverted(true);
+                rightFollowerMotor2.setInverted(true);
 
                 leftMainMotor.setIdleMode(IdleMode.kBrake);
                 rightMainMotor.setIdleMode(IdleMode.kBrake);
@@ -99,10 +95,8 @@ public class Drivetrain extends SubsystemBase {
                 leftEncoder = leftMainMotor.getEncoder();
                 rightEncoder = rightMainMotor.getEncoder();
 
-                leftEncoder.setInverted(true);
-                rightEncoder.setInverted(true);
-
                 drive = new DifferentialDrive(leftMainMotor, rightMainMotor);
+                odometry = new DifferentialDriveOdometry(getAngle(), leftDistance(), rightDistance());
         }
 
         public Rotation2d getAngle() {
@@ -151,6 +145,7 @@ public class Drivetrain extends SubsystemBase {
         public void tankDriveVolts(double leftVolts, double rightVolts) {
                 leftMainMotor.setVoltage(leftVolts);
                 rightMainMotor.setVoltage(rightVolts);
+                drive.feed();
         }
 
         @Override
@@ -183,12 +178,6 @@ public class Drivetrain extends SubsystemBase {
                                                 / Constants.DriveConstants.kGearingRatio),
                                 rightEncoder.getVelocity() * (Constants.DriveConstants.kWheelCircumference
                                                 / Constants.DriveConstants.kGearingRatio));
-        }
-
-        public static Drivetrain getInstance() {
-                if (instance == null)
-                        instance = new Drivetrain();
-                return instance;
         }
 
         /**
@@ -232,7 +221,7 @@ public class Drivetrain extends SubsystemBase {
                                 // Start at the origin facing the +X direction
                                 new Pose2d(0, 0, new Rotation2d(0)),
                                 // Pass through these two interior waypoints, making an 's' curve path
-                                List.of(new Translation2d(1, 1), new Translation2d(2, -1)),
+                                List.of(new Translation2d(1.5, 0)),
                                 // End 3 meters straight ahead of where we started, facing forward
                                 new Pose2d(3, 0, new Rotation2d(0)),
                                 // Pass config
