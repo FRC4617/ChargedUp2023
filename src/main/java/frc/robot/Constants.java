@@ -32,6 +32,9 @@ public final class Constants {
     public static final int kRightFollowerMotor1 = 1;
     public static final int kRightFollowerMotor2 = 3;
 
+    public static final int kelevatorMotor = 7;
+    public static final int kintakeMotor = 8;
+
     public static final DifferentialDriveKinematics kinematics = new DifferentialDriveKinematics(
         Units.inchesToMeters(22));
 

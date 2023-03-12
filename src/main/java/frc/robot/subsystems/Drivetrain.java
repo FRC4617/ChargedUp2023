@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.kauailabs.navx.frc.AHRS;
 import com.revrobotics.CANSparkMax;
+import com.revrobotics.ColorSensorV3;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
@@ -21,6 +22,7 @@ import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.trajectory.TrajectoryConfig;
 import edu.wpi.first.math.trajectory.TrajectoryGenerator;
 import edu.wpi.first.math.trajectory.constraint.DifferentialDriveVoltageConstraint;
+import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -31,9 +33,6 @@ import frc.robot.Constants;
 import frc.robot.Constants.DriveConstants;
 
 public class Drivetrain extends SubsystemBase {
-
-        public double xData[] = { 0, 0, 0, 0, 0 };
-        public double xWeight[] = { .5, .7, 1, .7, .5 };
 
         private final DifferentialDrive drive;
 
@@ -165,6 +164,10 @@ public class Drivetrain extends SubsystemBase {
 
                 SmartDashboard.putNumber("Left Distance", leftDistance());
                 SmartDashboard.putNumber("Right Distance", rightDistance());
+
+                SmartDashboard.putNumber("Red", Elevator.getRed());
+                SmartDashboard.putNumber("Green", Elevator.getGreen());
+                SmartDashboard.putNumber("Blue", Elevator.getBlue());
         }
 
         /**
