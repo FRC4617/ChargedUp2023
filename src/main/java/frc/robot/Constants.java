@@ -20,6 +20,9 @@ import edu.wpi.first.math.util.Units;
  * constants are needed, to reduce verbosity.
  */
 public final class Constants {
+
+  public static final double kDriverDeadband = 0.15;
+
   public static class OperatorConstants {
     public static final int kDriverControllerPort = 0;
   }
@@ -32,8 +35,8 @@ public final class Constants {
     public static final int kRightFollowerMotor1 = 1;
     public static final int kRightFollowerMotor2 = 3;
 
-    public static final int kelevatorMotor = 7;
-    public static final int kintakeMotor = 8;
+    public static final int kElevatorMotor = 7;
+    public static final int kIntakeMotor = 8;
 
     public static final DifferentialDriveKinematics kinematics = new DifferentialDriveKinematics(
         Units.inchesToMeters(22));
@@ -45,12 +48,12 @@ public final class Constants {
     // The Robot Characterization Toolsuite provides a convenient tool for obtaining
     // these
     // values for your robot.
-    public static final double ksVolts = 0.22;
-    public static final double kvVoltSecondsPerMeter = 1.98;
-    public static final double kaVoltSecondsSquaredPerMeter = 0.2;
+    public static final double ksVolts = -0.85744;
+    public static final double kvVoltSecondsPerMeter = 7.6349;
+    public static final double kaVoltSecondsSquaredPerMeter = 1.7086;
 
     // Example value only - as above, this must be tuned for your drive!
-    public static final double kPDriveVel = 8.5;
+    public static final double kPDriveVel = 2;
 
     public static final double kMaxSpeedMetersPerSecond = 3;
     public static final double kMaxAccelerationMetersPerSecondSquared = 1;

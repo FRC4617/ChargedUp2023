@@ -1,12 +1,18 @@
-package frc.robot.commands;
+package frc.robot.commands.drivetrain;
 
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.wpilibj2.command.CommandBase;
+import frc.robot.Constants;
 import frc.robot.RobotContainer;
 import frc.robot.subsystems.Drivetrain;
 
 public class ArcadeDrive extends CommandBase {
 
   public final Drivetrain drivetrain;
+
+  private final SlewRateLimiter xLimiter = new SlewRateLimiter(0.75);
+  private final SlewRateLimiter zLimiter = new SlewRateLimiter(0.75);
 
   public ArcadeDrive(Drivetrain subsystem) {
     drivetrain = subsystem;
@@ -27,23 +33,20 @@ public class ArcadeDrive extends CommandBase {
     }
 
     double x = -RobotContainer.k_driver.getRawAxis(4);
-    double y = -RobotContainer.k_driver.getRawAxis(1);
+    double z = -RobotContainer.k_driver.getRawAxis(1);
 
-    if (Math.abs(x) <= 0.05) {
-      x = 0;
-    }
+    x = MathUtil.applyDeadband(x, Constants.kDriverDeadband);
+    z = MathUtil.applyDeadband(z, Constants.kDriverDeadband);
 
-    if (Math.abs(y) <= 0.05) {
-      y = 0;
-    }
+    x = xLimiter.calculate(x);
+    z = zLimiter.calculate(z);
 
-    drivetrain.arcadeDrive(y, x, true);
-
+    drivetrain.arcadeDrive(z, x, true);
   }
 
   @Override
   public void end(boolean interrupted) {
-
+    drivetrain.arcadeDrive(0, 0, false);
   }
 
   @Override

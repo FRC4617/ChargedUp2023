@@ -4,9 +4,10 @@
 
 package frc.robot;
 
-import frc.robot.commands.ArcadeDrive;
-import frc.robot.commands.DriveTime;
+import frc.robot.commands.drivetrain.ArcadeDrive;
+import frc.robot.commands.drivetrain.DriveTime;
 import frc.robot.subsystems.Drivetrain;
+import frc.robot.subsystems.Elevator;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -26,6 +27,7 @@ import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 public class RobotContainer {
   // The robot's subsystems and commands are defined here...
   private final Drivetrain k_drivetrain;
+  private final Elevator k_elevator;
 
   // A chooser for autonomous commands
   SendableChooser<Command> m_chooser = new SendableChooser<>();
@@ -37,6 +39,7 @@ public class RobotContainer {
    */
   public RobotContainer() {
     k_drivetrain = new Drivetrain();
+    k_elevator = new Elevator();
 
     k_drivetrain.setDefaultCommand(new ArcadeDrive(k_drivetrain));
 

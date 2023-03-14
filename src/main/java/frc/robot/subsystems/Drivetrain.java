@@ -4,7 +4,6 @@ import java.util.List;
 
 import com.kauailabs.navx.frc.AHRS;
 import com.revrobotics.CANSparkMax;
-import com.revrobotics.ColorSensorV3;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
@@ -12,7 +11,6 @@ import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.RamseteController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
-import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -22,7 +20,6 @@ import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.trajectory.TrajectoryConfig;
 import edu.wpi.first.math.trajectory.TrajectoryGenerator;
 import edu.wpi.first.math.trajectory.constraint.DifferentialDriveVoltageConstraint;
-import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -58,9 +55,6 @@ public class Drivetrain extends SubsystemBase {
                         MotorType.kBrushless);
         private final CANSparkMax rightFollowerMotor2 = new CANSparkMax(Constants.DriveConstants.kRightFollowerMotor2,
                         MotorType.kBrushless);
-
-        private final SlewRateLimiter xLimiter = new SlewRateLimiter(0.75);
-        private final SlewRateLimiter zLimiter = new SlewRateLimiter(0.75);
 
         public Drivetrain() {
                 gyro = new AHRS(SPI.Port.kMXP);
@@ -117,7 +111,7 @@ public class Drivetrain extends SubsystemBase {
         }
 
         public void arcadeDrive(double xSpeed, double zRotation, boolean isQuickTurn) {
-                drive.curvatureDrive(xLimiter.calculate(xSpeed), zLimiter.calculate(zRotation), isQuickTurn);
+                drive.curvatureDrive(xSpeed, zRotation, isQuickTurn);
                 drive.feed();
         }
 
@@ -164,10 +158,6 @@ public class Drivetrain extends SubsystemBase {
 
                 SmartDashboard.putNumber("Left Distance", leftDistance());
                 SmartDashboard.putNumber("Right Distance", rightDistance());
-
-                SmartDashboard.putNumber("Red", Elevator.getRed());
-                SmartDashboard.putNumber("Green", Elevator.getGreen());
-                SmartDashboard.putNumber("Blue", Elevator.getBlue());
         }
 
         /**
