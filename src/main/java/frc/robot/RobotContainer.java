@@ -33,6 +33,7 @@ public class RobotContainer {
   SendableChooser<Command> m_chooser = new SendableChooser<>();
 
   public static XboxController k_driver = new XboxController(0);
+  public static XboxController k_operator = new XboxController(1);
 
   /**
    * The container for the robot. Contains subsystems, OI devices, and commands.
