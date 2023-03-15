@@ -36,7 +36,7 @@ public class RobotContainer {
   public static XboxController k_operator = new XboxController(1);
 
   /**
-   * The container for the robot. Contains subsystems, OI devices, and commands.
+    * The container for the robot. Contains subsystems, OI devices, and commands.
    */
   public RobotContainer() {
     k_drivetrain = new Drivetrain();
