@@ -11,8 +11,8 @@ public class ArcadeDrive extends CommandBase {
 
   public final Drivetrain drivetrain;
 
-  private final SlewRateLimiter xLimiter = new SlewRateLimiter(0.75);
-  private final SlewRateLimiter zLimiter = new SlewRateLimiter(0.75);
+  private final SlewRateLimiter xLimiter = new SlewRateLimiter(0.25);
+  private final SlewRateLimiter zLimiter = new SlewRateLimiter(0.30);
 
   public ArcadeDrive(Drivetrain subsystem) {
     drivetrain = subsystem;

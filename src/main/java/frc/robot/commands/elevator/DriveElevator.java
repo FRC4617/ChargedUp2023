@@ -9,14 +9,12 @@ public class DriveElevator extends CommandBase {
 
     private final Elevator elevator;
     private final DoubleSupplier elevatorSpeed;
-    private final DoubleSupplier intakeSpeed;
 
-    public DriveElevator(Elevator subsystem, DoubleSupplier elevatorSpeed, DoubleSupplier intakeSpeed) {
-        this.elevator = subsystem;
+    public DriveElevator(Elevator elevator, DoubleSupplier elevatorSpeed) {
+        this.elevator = elevator;
         this.elevatorSpeed = elevatorSpeed;
-        this.intakeSpeed = intakeSpeed;
 
-        addRequirements(subsystem);
+        addRequirements(this.elevator);
     }
 
     // Called when the command is initially scheduled.
@@ -27,7 +25,8 @@ public class DriveElevator extends CommandBase {
     // Called every time the scheduler runs while the command is scheduled.
     @Override
     public void execute() {
-        this.elevator.driveElevator(elevatorSpeed.getAsDouble(), intakeSpeed.getAsDouble());
+        
+        this.elevator.driveElevator(elevatorSpeed.getAsDouble());
     }
 
     // Called once the command ends or is interrupted.

@@ -22,6 +22,7 @@ import edu.wpi.first.math.trajectory.TrajectoryGenerator;
 import edu.wpi.first.math.trajectory.constraint.DifferentialDriveVoltageConstraint;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.RamseteCommand;
@@ -35,6 +36,7 @@ public class Drivetrain extends SubsystemBase {
 
         // Odometry class for tracking robot pose
         private final DifferentialDriveOdometry odometry;
+        private final Field2d field;
 
         private final AHRS gyro;
 
@@ -90,6 +92,9 @@ public class Drivetrain extends SubsystemBase {
 
                 drive = new DifferentialDrive(leftMainMotor, rightMainMotor);
                 odometry = new DifferentialDriveOdometry(getAngle(), leftDistance(), rightDistance());
+
+                field = new Field2d();
+                SmartDashboard.putData(field);
         }
 
         public Rotation2d getAngle() {
@@ -148,6 +153,8 @@ public class Drivetrain extends SubsystemBase {
                 odometry.update(
                                 getAngle(), leftDistance(), rightDistance());
 
+                field.setRobotPose(getPose());
+
                 SmartDashboard.putNumber("Left Speed", leftMainMotor.getAppliedOutput());
                 SmartDashboard.putNumber("Right Speed", rightMainMotor.getAppliedOutput());
 
@@ -158,6 +165,8 @@ public class Drivetrain extends SubsystemBase {
 
                 SmartDashboard.putNumber("Left Distance", leftDistance());
                 SmartDashboard.putNumber("Right Distance", rightDistance());
+
+                
         }
 
         /**
@@ -212,13 +221,15 @@ public class Drivetrain extends SubsystemBase {
                 // An example trajectory to follow. All units in meters.
                 Trajectory exampleTrajectory = TrajectoryGenerator.generateTrajectory(
                                 // Start at the origin facing the +X direction
-                                new Pose2d(0, 0, new Rotation2d(0)),
+                                new Pose2d(0, 1, new Rotation2d(0)),
                                 // Pass through these two interior waypoints, making an 's' curve path
                                 List.of(new Translation2d(1.5, 0)),
                                 // End 3 meters straight ahead of where we started, facing forward
                                 new Pose2d(3, 0, new Rotation2d(0)),
                                 // Pass config
                                 config);
+
+                odometry.resetPosition(getAngle(), leftDistance(), rightDistance(), exampleTrajectory.getInitialPose());
 
                 RamseteCommand ramseteCommand = new RamseteCommand(
                                 exampleTrajectory,
