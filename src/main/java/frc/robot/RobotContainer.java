@@ -12,6 +12,11 @@ import frc.robot.subsystems.Cameras;
 import frc.robot.subsystems.Drivetrain;
 import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.Intake;
+
+import com.pathplanner.lib.PathConstraints;
+import com.pathplanner.lib.PathPlanner;
+import com.pathplanner.lib.PathPlannerTrajectory;
+
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -43,7 +48,8 @@ public class RobotContainer {
   public static XboxController k_driver = new XboxController(0);
   public static XboxController k_operator = new XboxController(1);
 
-  private final JoystickButton k_swapCameraButton;
+  private final JoystickButton b_swapCameraButton;
+  private final JoystickButton b_resetDriveEncoders;
 
   /**
    * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -54,21 +60,32 @@ public class RobotContainer {
     k_intake = new Intake();
     k_cameras = new Cameras();
 
-    k_swapCameraButton = new JoystickButton(k_driver, XboxController.Button.kA.value);
+    b_swapCameraButton = new JoystickButton(k_driver, XboxController.Button.kA.value);
+    b_resetDriveEncoders = new JoystickButton(k_driver, XboxController.Button.kB.value);
 
-    k_drivetrain.setDefaultCommand(new ArcadeDrive(k_drivetrain));
+    k_drivetrain.setDefaultCommand(new ArcadeDrive(k_drivetrain, () -> k_driver.getYButtonPressed()));
     k_elevator.setDefaultCommand(new DriveElevator(
         k_elevator, () -> {
           return MathUtil.applyDeadband(k_driver.getRightTriggerAxis() - k_driver.getLeftTriggerAxis(), 0.1);
         }));
-    // k_intake.setDefaultCommand(new DriveIntake(
-    //     k_intake, () -> {
-    //       return MathUtil.applyDeadband(k_operator.getRightTriggerAxis() - k_operator.getLeftTriggerAxis(), 0.1);
-    //     }, () -> {
-    //       return k_operator.getXButton();
-    //     }));
+    k_intake.setDefaultCommand(new DriveIntake(
+        k_intake, () -> {
+          return MathUtil.applyDeadband(k_operator.getRightTriggerAxis() - k_operator.getLeftTriggerAxis(), 0.1);
+        }, () -> k_operator.getXButton()));
 
-    k_swapCameraButton.toggleOnTrue(new InstantCommand(() -> k_cameras.swapCamera()));
+    configureButtonBindings();
+    configureAuto();
+  }
+
+  private void configureButtonBindings() {
+    b_swapCameraButton.onTrue(new InstantCommand(() -> k_cameras.swapCamera()));
+    b_resetDriveEncoders.onTrue(new InstantCommand(() -> k_drivetrain.resetEncoders()));
+  }
+
+  private void configureAuto() {
+    PathPlannerTrajectory trajectory = PathPlanner.loadPath("New Path",
+        new PathConstraints(Constants.DriveConstants.kMaxSpeedMetersPerSecond,
+            Constants.DriveConstants.kMaxAccelerationMetersPerSecondSquared));
 
     Command basic = new DriveTime(k_drivetrain, 0.5, 0).withTimeout(1.5);
     Command advancedMiddle = new SequentialCommandGroup(
@@ -79,14 +96,7 @@ public class RobotContainer {
         new DriveTime(k_drivetrain, 0.5, 0).withTimeout(1.5), // exit community
         new DriveTime(k_drivetrain, 0.5, 0).withTimeout(1.5) // drive onto docking station
     );
-    // Command advancedLeft = new SequentialCommandGroup(
-    // new DriveTime(k_drivetrain, 0.5, 0).withTimeout(1.5), // exit community
-    // new DriveTime(k_drivetrain, 0.5, 0).withTimeout(1.5) // drive onto docking
-    // station
-    // );
-    Command drivePath = new SequentialCommandGroup(
-        new InstantCommand(() -> k_drivetrain.zeroAngle()),
-        k_drivetrain.getAutonomousCommand());
+    Command drivePath = k_drivetrain.followTrajectoryCommand(trajectory, true);
 
     // Add commands to the autonomous command chooser
     m_chooser.setDefaultOption("Simple Auto", basic);
@@ -96,7 +106,6 @@ public class RobotContainer {
 
     // Put the chooser on the dashboard
     SmartDashboard.putData(m_chooser);
-
   }
 
   /**

@@ -1,31 +1,27 @@
 package frc.robot.subsystems;
 
-import java.util.List;
-
 import com.kauailabs.navx.frc.AHRS;
+import com.pathplanner.lib.PathPlannerTrajectory;
+import com.pathplanner.lib.commands.PPRamseteCommand;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
-
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.RamseteController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
 import edu.wpi.first.math.kinematics.DifferentialDriveWheelSpeeds;
-import edu.wpi.first.math.trajectory.Trajectory;
-import edu.wpi.first.math.trajectory.TrajectoryConfig;
-import edu.wpi.first.math.trajectory.TrajectoryGenerator;
-import edu.wpi.first.math.trajectory.constraint.DifferentialDriveVoltageConstraint;
 import edu.wpi.first.wpilibj.SPI;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.RamseteCommand;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.Constants.DriveConstants;
@@ -60,6 +56,7 @@ public class Drivetrain extends SubsystemBase {
 
         public Drivetrain() {
                 gyro = new AHRS(SPI.Port.kMXP);
+                gyro.calibrate();
 
                 leftMainMotor.restoreFactoryDefaults();
                 rightMainMotor.restoreFactoryDefaults();
@@ -89,6 +86,13 @@ public class Drivetrain extends SubsystemBase {
 
                 leftEncoder = leftMainMotor.getEncoder();
                 rightEncoder = rightMainMotor.getEncoder();
+
+                // Sleep to configure the motors
+                Timer.delay(1);
+
+                if (!gyro.isCalibrating()) {
+                        gyro.reset();
+                }
 
                 drive = new DifferentialDrive(leftMainMotor, rightMainMotor);
                 odometry = new DifferentialDriveOdometry(getAngle(), leftDistance(), rightDistance());
@@ -165,8 +169,6 @@ public class Drivetrain extends SubsystemBase {
 
                 SmartDashboard.putNumber("Left Distance", leftDistance());
                 SmartDashboard.putNumber("Right Distance", rightDistance());
-
-                
         }
 
         /**
@@ -195,64 +197,35 @@ public class Drivetrain extends SubsystemBase {
         }
 
         /**
-         * Use this to pass the autonomous command to the main {@link Robot} class.
-         *
-         * @return the command to run in autonomous
+         * 
+         * @param traj
+         * @param isFirstPath
+         * @return
          */
-        public Command getAutonomousCommand() {
-                // Create a voltage constraint to ensure we don't accelerate too fast
-                var autoVoltageConstraint = new DifferentialDriveVoltageConstraint(
-                                new SimpleMotorFeedforward(
-                                                DriveConstants.ksVolts,
-                                                DriveConstants.kvVoltSecondsPerMeter,
-                                                DriveConstants.kaVoltSecondsSquaredPerMeter),
-                                Constants.DriveConstants.kinematics,
-                                10);
-
-                // Create config for trajectory
-                TrajectoryConfig config = new TrajectoryConfig(
-                                Constants.DriveConstants.kMaxSpeedMetersPerSecond,
-                                Constants.DriveConstants.kMaxAccelerationMetersPerSecondSquared)
-                                // Add kinematics to ensure max speed is actually obeyed
-                                .setKinematics(Constants.DriveConstants.kinematics)
-                                // Apply the voltage constraint
-                                .addConstraint(autoVoltageConstraint);
-
-                // An example trajectory to follow. All units in meters.
-                Trajectory exampleTrajectory = TrajectoryGenerator.generateTrajectory(
-                                // Start at the origin facing the +X direction
-                                new Pose2d(0, 1, new Rotation2d(0)),
-                                // Pass through these two interior waypoints, making an 's' curve path
-                                List.of(new Translation2d(1.5, 0)),
-                                // End 3 meters straight ahead of where we started, facing forward
-                                new Pose2d(3, 0, new Rotation2d(0)),
-                                // Pass config
-                                config);
-
-                odometry.resetPosition(getAngle(), leftDistance(), rightDistance(), exampleTrajectory.getInitialPose());
-
-                RamseteCommand ramseteCommand = new RamseteCommand(
-                                exampleTrajectory,
-                                this::getPose,
-                                new RamseteController(Constants.DriveConstants.kRamseteB,
-                                                Constants.DriveConstants.kRamseteZeta),
-                                new SimpleMotorFeedforward(
-                                                DriveConstants.ksVolts,
-                                                DriveConstants.kvVoltSecondsPerMeter,
-                                                DriveConstants.kaVoltSecondsSquaredPerMeter),
-                                Constants.DriveConstants.kinematics,
-                                this::getWheelSpeeds,
-                                new PIDController(DriveConstants.kPDriveVel, 0, 0),
-                                new PIDController(DriveConstants.kPDriveVel, 0, 0),
-                                // RamseteCommand passes volts to the callback
-                                this::tankDriveVolts,
-                                this);
-
-                // Reset odometry to the starting pose of the trajectory.
-                this.resetOdometry(exampleTrajectory.getInitialPose());
-
-                // Run path following command, then stop at the end.
-                return ramseteCommand.andThen(() -> this.tankDriveVolts(0, 0));
+        public Command followTrajectoryCommand(PathPlannerTrajectory traj, boolean isFirstPath) {
+                return new SequentialCommandGroup(
+                                new InstantCommand(() -> {
+                                        // Reset odometry for the first path you run during auto
+                                        if (isFirstPath) {
+                                                this.resetOdometry(traj.getInitialPose());
+                                        }
+                                }),
+                                new PPRamseteCommand(
+                                                traj,
+                                                this::getPose, // Pose supplier
+                                                new RamseteController(Constants.DriveConstants.kRamseteB,
+                                                                Constants.DriveConstants.kRamseteZeta),
+                                                new SimpleMotorFeedforward(
+                                                                DriveConstants.ksVolts,
+                                                                DriveConstants.kvVoltSecondsPerMeter,
+                                                                DriveConstants.kaVoltSecondsSquaredPerMeter),
+                                                Constants.DriveConstants.kinematics,
+                                                this::getWheelSpeeds,
+                                                new PIDController(DriveConstants.kPDriveVel, 0, 0),
+                                                new PIDController(DriveConstants.kPDriveVel, 0, 0),
+                                                this::tankDriveVolts,
+                                                true,
+                                                this));
         }
 
         public void stop() {

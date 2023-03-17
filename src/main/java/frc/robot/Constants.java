@@ -4,7 +4,9 @@
 
 package frc.robot;
 
+import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.kinematics.DifferentialDriveKinematics;
+import edu.wpi.first.math.trajectory.constraint.DifferentialDriveVoltageConstraint;
 import edu.wpi.first.math.util.Units;
 
 /**
@@ -66,5 +68,13 @@ public final class Constants {
     public static final double kGearingRatio = 12.75;
 
     public static final double kWheelCircumference = Units.inchesToMeters(6) * Math.PI;
+
+    public static final DifferentialDriveVoltageConstraint autoVoltageConstraint = new DifferentialDriveVoltageConstraint(
+        new SimpleMotorFeedforward(
+            DriveConstants.ksVolts,
+            DriveConstants.kvVoltSecondsPerMeter,
+            DriveConstants.kaVoltSecondsSquaredPerMeter),
+        Constants.DriveConstants.kinematics,
+        10);
   }
 }

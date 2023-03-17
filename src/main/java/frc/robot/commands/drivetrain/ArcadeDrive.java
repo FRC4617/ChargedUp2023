@@ -1,5 +1,7 @@
 package frc.robot.commands.drivetrain;
 
+import java.util.function.BooleanSupplier;
+
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.wpilibj2.command.CommandBase;
@@ -14,8 +16,15 @@ public class ArcadeDrive extends CommandBase {
   private final SlewRateLimiter xLimiter = new SlewRateLimiter(0.25);
   private final SlewRateLimiter zLimiter = new SlewRateLimiter(0.30);
 
-  public ArcadeDrive(Drivetrain subsystem) {
-    drivetrain = subsystem;
+  private final BooleanSupplier endgame;
+
+  private boolean endgameActive = false;
+  private final double kMaxSpeedEndgame = 0.5;
+
+  public ArcadeDrive(Drivetrain subsystem,
+      BooleanSupplier endgame) {
+    this.drivetrain = subsystem;
+    this.endgame = endgame;
 
     addRequirements(subsystem);
 
@@ -23,13 +32,22 @@ public class ArcadeDrive extends CommandBase {
 
   @Override
   public void initialize() {
-
   }
 
   @Override
   public void execute() {
-    if (RobotContainer.k_driver.getBButtonPressed()) {
-      drivetrain.resetEncoders();
+    double maxSpeed = 1;
+
+    // If the endgame button is pressed, limit the speed of the robot
+    if (endgame.getAsBoolean()) {
+      if (!endgameActive) {
+        maxSpeed = kMaxSpeedEndgame;
+        endgameActive = true;
+      }
+    } else {
+      if (endgameActive) {
+        endgameActive = false;
+      }
     }
 
     double x = -RobotContainer.k_driver.getRawAxis(4);
@@ -37,6 +55,10 @@ public class ArcadeDrive extends CommandBase {
 
     x = MathUtil.applyDeadband(x, Constants.kDriverDeadband);
     z = MathUtil.applyDeadband(z, Constants.kDriverDeadband);
+
+    // Apply the max speed
+    x *= maxSpeed;
+    z *= maxSpeed;
 
     x = xLimiter.calculate(x);
     z = zLimiter.calculate(z);
