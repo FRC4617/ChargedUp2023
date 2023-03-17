@@ -2,6 +2,8 @@ package frc.robot.subsystems;
 
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
+import com.revrobotics.SparkMaxPIDController;
+import com.revrobotics.CANSparkMax.ControlType;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
@@ -13,16 +15,28 @@ public class Elevator extends SubsystemBase {
 
     private final CANSparkMax elevatorMotor;
     private final RelativeEncoder elevatorEncoder;
+    private final SparkMaxPIDController pidController;
 
     public Elevator() {
         elevatorMotor = new CANSparkMax(Constants.DriveConstants.kElevatorMotor, MotorType.kBrushless);
-        elevatorEncoder = elevatorMotor.getEncoder();
 
         elevatorMotor.restoreFactoryDefaults();
         elevatorMotor.setSmartCurrentLimit(40);
         elevatorMotor.setIdleMode(IdleMode.kBrake);
         elevatorMotor.setInverted(true);
+
+        elevatorEncoder = elevatorMotor.getEncoder();
         elevatorEncoder.setPosition(0);
+
+        pidController = elevatorMotor.getPIDController();
+        pidController.setP(Constants.DriveConstants.kElevatorP);
+        pidController.setI(Constants.DriveConstants.kElevatorI);
+        pidController.setD(Constants.DriveConstants.kElevatorD);
+        pidController.setIZone(Constants.DriveConstants.kElevatorIZone);
+        pidController.setFF(Constants.DriveConstants.kElevatorFF);
+        pidController.setOutputRange(-1, 1);
+        pidController.setSmartMotionMaxVelocity(Constants.DriveConstants.kElevatorVelocity, 0);
+        pidController.setSmartMotionMaxAccel(Constants.DriveConstants.kElevatorAcceleration, 0);
     }
 
     public void driveElevator(double elevatorSpeed) {
@@ -33,6 +47,10 @@ public class Elevator extends SubsystemBase {
         elevatorMotor.set(speed * 0.5);
     }
 
+    public void setElevatorPosition(double position) {
+        pidController.setReference(position, ControlType.kSmartMotion);
+    }
+
     public void stop() {
         setElevatorSpeed(0);
     }
@@ -41,7 +59,5 @@ public class Elevator extends SubsystemBase {
     public void periodic() {
         SmartDashboard.putNumber("Elevator Position", elevatorEncoder.getPosition());
         SmartDashboard.putNumber("Elevator Velocity", elevatorEncoder.getVelocity());
-
     }
-
 }

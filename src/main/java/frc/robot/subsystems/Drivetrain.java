@@ -84,8 +84,14 @@ public class Drivetrain extends SubsystemBase {
                 rightFollowerMotor1.setIdleMode(IdleMode.kCoast);
                 rightFollowerMotor2.setIdleMode(IdleMode.kCoast);
 
+                leftMainMotor.setSmartCurrentLimit(20, 15);
+                rightMainMotor.setSmartCurrentLimit(20, 15);
+
                 leftEncoder = leftMainMotor.getEncoder();
                 rightEncoder = rightMainMotor.getEncoder();
+
+                leftEncoder.setPosition(0);
+                rightEncoder.setPosition(0);
 
                 // Sleep to configure the motors
                 Timer.delay(1);
@@ -231,5 +237,4 @@ public class Drivetrain extends SubsystemBase {
         public void stop() {
                 drive.stopMotor();
         }
-
 }

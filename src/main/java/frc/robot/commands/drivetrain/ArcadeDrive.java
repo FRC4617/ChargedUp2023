@@ -13,8 +13,8 @@ public class ArcadeDrive extends CommandBase {
 
   public final Drivetrain drivetrain;
 
-  private final SlewRateLimiter xLimiter = new SlewRateLimiter(0.25);
-  private final SlewRateLimiter zLimiter = new SlewRateLimiter(0.30);
+  private final SlewRateLimiter xLimiter = new SlewRateLimiter(0.3);
+  private final SlewRateLimiter zLimiter = new SlewRateLimiter(0.8);
 
   private final BooleanSupplier endgame;
 
@@ -27,7 +27,6 @@ public class ArcadeDrive extends CommandBase {
     this.endgame = endgame;
 
     addRequirements(subsystem);
-
   }
 
   @Override

@@ -30,6 +30,7 @@ public final class Constants {
   }
 
   public static class DriveConstants {
+
     public static final int kLeftMainMotor = 5;
     public static final int kRightMainMotor = 2;
     public static final int kLeftFollowerMotor1 = 4;
@@ -39,6 +40,16 @@ public final class Constants {
 
     public static final int kElevatorMotor = 7;
     public static final int kIntakeMotor = 8;
+
+    public static final double kElevatorP = 0.0005;
+    public static final double kElevatorI = 0;
+    public static final double kElevatorD = 0;
+    public static final double kElevatorIZone = 0;
+    public static final double kElevatorFF = 0;
+    public static final double kElevatorVelocity = 5000;
+    public static final double kElevatorAcceleration = 3000;
+
+    public static final double kElevatorHighPosition = 80;
 
     public static final DifferentialDriveKinematics kinematics = new DifferentialDriveKinematics(
         Units.inchesToMeters(22));
@@ -57,13 +68,13 @@ public final class Constants {
     // Example value only - as above, this must be tuned for your drive!
     public static final double kPDriveVel = 0.004;
 
-    public static final double kMaxSpeedMetersPerSecond = 1;
+    public static final double kMaxSpeedMetersPerSecond = 2;
     public static final double kMaxAccelerationMetersPerSecondSquared = 1;
 
     // Reasonable baseline values for a RAMSETE follower in units of meters and
     // seconds
-    public static final double kRamseteB = 5;
-    public static final double kRamseteZeta = 0.4;
+    public static final double kRamseteB = 2;
+    public static final double kRamseteZeta = 0.7;
 
     public static final double kGearingRatio = 12.75;
 
