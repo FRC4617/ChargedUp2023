@@ -86,6 +86,10 @@ public class Drivetrain extends SubsystemBase {
 
                 leftMainMotor.setSmartCurrentLimit(20, 15);
                 rightMainMotor.setSmartCurrentLimit(20, 15);
+                leftFollowerMotor1.setSmartCurrentLimit(20, 15);
+                leftFollowerMotor2.setSmartCurrentLimit(20, 15);
+                rightFollowerMotor1.setSmartCurrentLimit(20, 15);
+                rightFollowerMotor2.setSmartCurrentLimit(20, 15);
 
                 leftEncoder = leftMainMotor.getEncoder();
                 rightEncoder = rightMainMotor.getEncoder();
@@ -208,6 +212,7 @@ public class Drivetrain extends SubsystemBase {
          * @param isFirstPath
          * @return
          */
+        
         public Command followTrajectoryCommand(PathPlannerTrajectory traj, boolean isFirstPath) {
                 return new SequentialCommandGroup(
                                 new InstantCommand(() -> {

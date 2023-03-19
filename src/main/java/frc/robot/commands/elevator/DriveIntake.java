@@ -39,7 +39,7 @@ public class DriveIntake extends CommandBase {
     if (Math.abs(tempSpeed) < 0.15)
       tempSpeed = -0.15;
     if (outputButton.getAsBoolean())
-      tempSpeed = 0.5;
+      tempSpeed = 0.35;
     intake.setIntakeSpeed(tempSpeed);
   }
 

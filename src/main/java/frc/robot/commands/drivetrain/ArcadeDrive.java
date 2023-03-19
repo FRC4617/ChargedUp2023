@@ -13,8 +13,8 @@ public class ArcadeDrive extends CommandBase {
 
   public final Drivetrain drivetrain;
 
-  private final SlewRateLimiter xLimiter = new SlewRateLimiter(0.3);
-  private final SlewRateLimiter zLimiter = new SlewRateLimiter(0.8);
+  private final SlewRateLimiter xLimiter = new SlewRateLimiter(1.25);
+  private final SlewRateLimiter zLimiter = new SlewRateLimiter(0.75);
 
   private final BooleanSupplier endgame;
 
@@ -59,7 +59,10 @@ public class ArcadeDrive extends CommandBase {
     x *= maxSpeed;
     z *= maxSpeed;
 
-    x = xLimiter.calculate(x);
+    // x = Math.pow(x, 3);
+    // z = Math.pow(z, 3);
+
+    x = xLimiter.calculate(x) * 0.5;
     z = zLimiter.calculate(z);
 
     drivetrain.arcadeDrive(z, x, true);

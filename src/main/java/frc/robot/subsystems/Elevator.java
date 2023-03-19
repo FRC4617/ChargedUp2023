@@ -39,6 +39,11 @@ public class Elevator extends SubsystemBase {
         pidController.setSmartMotionMaxAccel(Constants.DriveConstants.kElevatorAcceleration, 0);
     }
 
+    public void zeroElevator() {
+        elevatorEncoder.setPosition(0);
+
+    }
+
     public void driveElevator(double elevatorSpeed) {
         setElevatorSpeed(elevatorSpeed);
     }
