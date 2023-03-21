@@ -235,7 +235,7 @@ public class Drivetrain extends SubsystemBase {
                                                 new PIDController(DriveConstants.kPDriveVel, 0, 0),
                                                 new PIDController(DriveConstants.kPDriveVel, 0, 0),
                                                 this::tankDriveVolts,
-                                                true,
+                                                false,
                                                 this));
         }
 

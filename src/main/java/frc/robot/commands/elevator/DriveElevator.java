@@ -3,7 +3,6 @@ package frc.robot.commands.elevator;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 
-import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.subsystems.Elevator;
 
@@ -13,7 +12,7 @@ public class DriveElevator extends CommandBase {
     private final DoubleSupplier elevatorSpeed;
     private BooleanSupplier elevatorUp;
     private BooleanSupplier elevatorDown;
-    DigitalInput limitSwitch = new DigitalInput(0);
+    
 
     public DriveElevator(Elevator elevator, DoubleSupplier elevatorSpeed, BooleanSupplier elevatorUp,
             BooleanSupplier elevatorDown) {
@@ -32,14 +31,11 @@ public class DriveElevator extends CommandBase {
     // Called every time the scheduler runs while the command is scheduled.
     @Override
     public void execute() {
-
         double tempSpeed = elevatorSpeed.getAsDouble();
-        if (limitSwitch.get() == true) // switch will be on
-            tempSpeed = 0;
-        else if (elevatorDown.getAsBoolean() && limitSwitch.get() == false)// switch is NOT on
-            tempSpeed = 0.80;
-        else if (elevatorUp.getAsBoolean())
+        if (elevatorUp.getAsBoolean())
             tempSpeed = -0.80;
+        if(elevatorDown.getAsBoolean())
+            tempSpeed=0.80;
 
         elevator.setElevatorSpeed(tempSpeed);
 

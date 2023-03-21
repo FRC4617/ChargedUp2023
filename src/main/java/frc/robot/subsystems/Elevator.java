@@ -7,6 +7,7 @@ import com.revrobotics.CANSparkMax.ControlType;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
+import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
@@ -16,9 +17,11 @@ public class Elevator extends SubsystemBase {
     private final CANSparkMax elevatorMotor;
     private final RelativeEncoder elevatorEncoder;
     private final SparkMaxPIDController pidController;
+    private final DigitalInput limitSwitch;
 
     public Elevator() {
         elevatorMotor = new CANSparkMax(Constants.DriveConstants.kElevatorMotor, MotorType.kBrushless);
+        limitSwitch = new DigitalInput(0);
 
         elevatorMotor.restoreFactoryDefaults();
         elevatorMotor.setSmartCurrentLimit(40);
@@ -49,6 +52,12 @@ public class Elevator extends SubsystemBase {
     }
 
     public void setElevatorSpeed(double speed) {
+        if (speed < 0) {
+            if (limitSwitch.get()) {
+                elevatorMotor.set(0);
+                return;
+            }
+        }
         elevatorMotor.set(speed * 0.5);
     }
 
