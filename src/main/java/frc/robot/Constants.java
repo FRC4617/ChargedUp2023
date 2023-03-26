@@ -52,7 +52,7 @@ public final class Constants {
     public static final double kElevatorHighPosition = 80;
 
     public static final DifferentialDriveKinematics kinematics = new DifferentialDriveKinematics(
-        Units.inchesToMeters(22));
+        Units.inchesToMeters(2*Math.PI*3));
 
     // These are example values only - DO NOT USE THESE FOR YOUR OWN ROBOT!
     // These characterization values MUST be determined either experimentally or
@@ -68,6 +68,8 @@ public final class Constants {
     // Example value only - as above, this must be tuned for your drive!
     public static final double kPDriveVel = 0.004;
 
+
+    //2,1
     public static final double kMaxSpeedMetersPerSecond = 2;
     public static final double kMaxAccelerationMetersPerSecondSquared = 1;
 

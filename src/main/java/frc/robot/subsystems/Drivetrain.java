@@ -84,6 +84,7 @@ public class Drivetrain extends SubsystemBase {
                 rightFollowerMotor1.setIdleMode(IdleMode.kCoast);
                 rightFollowerMotor2.setIdleMode(IdleMode.kCoast);
 
+                // Previous values: 20,15 ....... 40,20
                 leftMainMotor.setSmartCurrentLimit(20, 15);
                 rightMainMotor.setSmartCurrentLimit(20, 15);
                 leftFollowerMotor1.setSmartCurrentLimit(20, 15);
@@ -137,6 +138,7 @@ public class Drivetrain extends SubsystemBase {
         public void resetEncoders() {
                 leftEncoder.setPosition(0);
                 rightEncoder.setPosition(0);
+
         }
 
         /**
@@ -163,22 +165,23 @@ public class Drivetrain extends SubsystemBase {
         @Override
         public void periodic() {
 
-                // Update the odometry in the periodic block
-                odometry.update(
-                                getAngle(), leftDistance(), rightDistance());
+                // // Update the odometry in the periodic block
+                // odometry.update(
+                // getAngle(), leftDistance(), rightDistance());
 
-                field.setRobotPose(getPose());
+                // field.setRobotPose(getPose());
 
-                SmartDashboard.putNumber("Left Speed", leftMainMotor.getAppliedOutput());
-                SmartDashboard.putNumber("Right Speed", rightMainMotor.getAppliedOutput());
+                // SmartDashboard.putNumber("Left Speed", leftMainMotor.getAppliedOutput());
+                // SmartDashboard.putNumber("Right Speed", rightMainMotor.getAppliedOutput());
 
                 SmartDashboard.putNumber("Left Encoder Position", leftEncoder.getPosition());
                 SmartDashboard.putNumber("Right Encoder Position", rightEncoder.getPosition());
 
-                SmartDashboard.putNumber("Gyro", getAngle().getDegrees());
+                // SmartDashboard.putNumber("Gyro", getAngle().getDegrees());
 
-                SmartDashboard.putNumber("Left Distance", leftDistance());
-                SmartDashboard.putNumber("Right Distance", rightDistance());
+                // SmartDashboard.putNumber("Left Distance", leftDistance());
+                // SmartDashboard.putNumber("Right Distance", rightDistance());
+
         }
 
         /**
@@ -212,7 +215,7 @@ public class Drivetrain extends SubsystemBase {
          * @param isFirstPath
          * @return
          */
-        
+
         public Command followTrajectoryCommand(PathPlannerTrajectory traj, boolean isFirstPath) {
                 return new SequentialCommandGroup(
                                 new InstantCommand(() -> {

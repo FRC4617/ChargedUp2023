@@ -5,6 +5,7 @@
 package frc.robot;
 
 import frc.robot.commands.drivetrain.ArcadeDrive;
+import frc.robot.commands.drivetrain.DriveTime;
 import frc.robot.commands.elevator.DriveElevator;
 import frc.robot.commands.elevator.DriveElevatorPosition;
 import frc.robot.commands.elevator.DriveIntake;
@@ -84,6 +85,9 @@ public class RobotContainer {
     }
 
     private void configureAuto() {
+
+
+
         PathPlannerTrajectory topBlue = PathPlanner.loadPath("Blue 1",
                 new PathConstraints(Constants.DriveConstants.kMaxSpeedMetersPerSecond,
                         Constants.DriveConstants.kMaxAccelerationMetersPerSecondSquared),
@@ -92,10 +96,16 @@ public class RobotContainer {
                 new PathConstraints(Constants.DriveConstants.kMaxSpeedMetersPerSecond,
                         Constants.DriveConstants.kMaxAccelerationMetersPerSecondSquared),
                 true);
-        PathPlannerTrajectory bottomBlue = PathPlanner.loadPath("Blue 3",
+        PathPlannerTrajectory NEWPATH = PathPlanner.loadPath("New Path",
                 new PathConstraints(Constants.DriveConstants.kMaxSpeedMetersPerSecond,
                         Constants.DriveConstants.kMaxAccelerationMetersPerSecondSquared),
                 true);
+
+                PathPlannerTrajectory RAMP = PathPlanner.loadPath("RampOrSomethingCoolLikeThat",
+                new PathConstraints(0.01,0.01),
+                false);
+
+
 
         PathPlannerTrajectory topRed = PathPlanner.loadPath("Red 1",
                 new PathConstraints(Constants.DriveConstants.kMaxSpeedMetersPerSecond,
@@ -110,6 +120,24 @@ public class RobotContainer {
                         Constants.DriveConstants.kMaxAccelerationMetersPerSecondSquared),
                 true);
 
+
+                Command Ramp = new SequentialCommandGroup(
+                        new InstantCommand(() -> k_drivetrain.resetEncoders()),
+                        new ParallelCommandGroup(
+                                new DriveElevatorPosition(k_elevator, Constants.DriveConstants.kElevatorHighPosition))
+                                .withTimeout(3),
+                        new DriveIntakeSpeed(k_intake, 1).withTimeout(1),
+                        new DriveIntakeSpeed(k_intake, 0).withTimeout(0.1),
+                        new ParallelCommandGroup(
+                                new DriveElevatorPosition(k_elevator, 0)).withTimeout(3),
+                       // new ParallelCommandGroup(
+                       // new DriveElevatorPosition(k_elevator, 0),        
+                      // k_drivetrain.followTrajectoryCommand(RAMP, true)));
+                        new DriveTime(k_drivetrain, -0.4, 0).withTimeout(5),
+                        new DriveTime(k_drivetrain, 0.4, 0).withTimeout(1),
+                        new DriveTime(k_drivetrain, 0.2, 0).withTimeout(2.75));
+        
+
         Command driveBottomBlue = new SequentialCommandGroup(
                 new InstantCommand(() -> k_drivetrain.resetEncoders()),
                 new ParallelCommandGroup(
@@ -118,9 +146,10 @@ public class RobotContainer {
                 new DriveIntakeSpeed(k_intake, 1).withTimeout(1),
                 new DriveIntakeSpeed(k_intake, 0).withTimeout(0.1),
                 new ParallelCommandGroup(
-                        new DriveElevatorPosition(k_elevator, 0),
-                        k_drivetrain.followTrajectoryCommand(bottomBlue, true)));
-
+                        new DriveElevatorPosition(k_elevator, 10)).withTimeout(3),
+                new ParallelCommandGroup(
+                new DriveElevatorPosition(k_elevator, 0),        
+                k_drivetrain.followTrajectoryCommand(NEWPATH, true)));
         Command driveMiddleBlue = new SequentialCommandGroup(
                 new InstantCommand(() -> k_drivetrain.resetEncoders()),
                 new ParallelCommandGroup(
@@ -177,10 +206,11 @@ public class RobotContainer {
         m_chooser.setDefaultOption("None", null);
         m_chooser.addOption("Top Blue", driveTopBlue);
         m_chooser.addOption("Middle Blue", driveMiddleBlue);
-        m_chooser.addOption("Bottom Blue", driveBottomBlue);
+        m_chooser.addOption("THIS ONE", driveBottomBlue);
         m_chooser.addOption("Top Red", driveTopRed);
         m_chooser.addOption("Middle Red", driveMiddleRed);
         m_chooser.addOption("Bottom Red", driveBottomRed);
+        m_chooser.addOption("RAMP!!!!!", Ramp);
 
         // Put the chooser on the dashboard
         SmartDashboard.putData(m_chooser);
