@@ -11,7 +11,7 @@ import frc.robot.subsystems.Drivetrain;
 
 public class ArcadeDrive extends CommandBase {
 
-  public final Drivetrain drivetrain;
+  private final Drivetrain drivetrain;
 
   private final SlewRateLimiter xLimiter = new SlewRateLimiter(1.25);
   private final SlewRateLimiter zLimiter = new SlewRateLimiter(0.75);

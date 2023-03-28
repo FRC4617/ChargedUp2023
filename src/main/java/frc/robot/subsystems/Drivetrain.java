@@ -85,12 +85,12 @@ public class Drivetrain extends SubsystemBase {
                 rightFollowerMotor2.setIdleMode(IdleMode.kCoast);
 
                 // Previous values: 20,15 ....... 40,20
-                leftMainMotor.setSmartCurrentLimit(20, 15);
-                rightMainMotor.setSmartCurrentLimit(20, 15);
-                leftFollowerMotor1.setSmartCurrentLimit(20, 15);
-                leftFollowerMotor2.setSmartCurrentLimit(20, 15);
-                rightFollowerMotor1.setSmartCurrentLimit(20, 15);
-                rightFollowerMotor2.setSmartCurrentLimit(20, 15);
+                leftMainMotor.setSmartCurrentLimit(40, 20);
+                rightMainMotor.setSmartCurrentLimit(40, 20);
+                leftFollowerMotor1.setSmartCurrentLimit(40, 20);
+                leftFollowerMotor2.setSmartCurrentLimit(40, 20);
+                rightFollowerMotor1.setSmartCurrentLimit(40, 20);
+                rightFollowerMotor2.setSmartCurrentLimit(40, 20);
 
                 leftEncoder = leftMainMotor.getEncoder();
                 rightEncoder = rightMainMotor.getEncoder();
@@ -138,7 +138,6 @@ public class Drivetrain extends SubsystemBase {
         public void resetEncoders() {
                 leftEncoder.setPosition(0);
                 rightEncoder.setPosition(0);
-
         }
 
         /**
@@ -209,6 +208,26 @@ public class Drivetrain extends SubsystemBase {
                                 pose);
         }
 
+        public double getPitch() {
+                return gyro.getPitch();
+        }
+
+        public double getRoll() {
+                return gyro.getRoll();
+        }
+
+        // returns the magnititude of the robot's tilt calculated by the root of
+        // pitch^2 + roll^2, used to compensate for diagonally mounted rio
+        public double getTilt() {
+                double pitch = getPitch();
+                double roll = getRoll();
+                if ((pitch + roll) >= 0) {
+                        return Math.sqrt(pitch * pitch + roll * roll);
+                } else {
+                        return -Math.sqrt(pitch * pitch + roll * roll);
+                }
+        }
+
         /**
          * 
          * @param traj
@@ -240,6 +259,7 @@ public class Drivetrain extends SubsystemBase {
                                                 this::tankDriveVolts,
                                                 false,
                                                 this));
+
         }
 
         public void stop() {

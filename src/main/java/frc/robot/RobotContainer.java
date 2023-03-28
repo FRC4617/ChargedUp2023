@@ -5,6 +5,7 @@
 package frc.robot;
 
 import frc.robot.commands.drivetrain.ArcadeDrive;
+import frc.robot.commands.drivetrain.AutoBalance;
 import frc.robot.commands.drivetrain.DriveTime;
 import frc.robot.commands.elevator.DriveElevator;
 import frc.robot.commands.elevator.DriveElevatorPosition;
@@ -38,190 +39,209 @@ import edu.wpi.first.wpilibj2.command.button.JoystickButton;
  * subsystems, commands, and trigger mappings) should be declared here.
  */
 public class RobotContainer {
-    // The robot's subsystems and commands are defined here...
-    private final Drivetrain k_drivetrain;
-    private final Elevator k_elevator;
-    private final Intake k_intake;
+        // The robot's subsystems and commands are defined here...
+        private final Drivetrain k_drivetrain;
+        private final Elevator k_elevator;
+        private final Intake k_intake;
 
-    // A chooser for autonomous commands
-    SendableChooser<Command> m_chooser = new SendableChooser<>();
+        // A chooser for autonomous commands
+        SendableChooser<Command> m_chooser = new SendableChooser<>();
 
-    public static XboxController k_driver = new XboxController(0);
-    public static XboxController k_operator = new XboxController(1);
+        public static XboxController k_driver = new XboxController(0);
+        public static XboxController k_operator = new XboxController(1);
 
-    private final JoystickButton b_resetDriveEncoders;
-    private final JoystickButton b_zeroElevator;
+        private final JoystickButton b_resetDriveEncoders;
+        private final JoystickButton b_zeroElevator;
 
-    /**
-     * The container for the robot. Contains subsystems, OI devices, and commands.
-     */
-    public RobotContainer() {
-        k_drivetrain = new Drivetrain();
-        k_elevator = new Elevator();
-        k_intake = new Intake();
+        /**
+         * The container for the robot. Contains subsystems, OI devices, and commands.
+         */
+        public RobotContainer() {
+                k_drivetrain = new Drivetrain();
+                k_elevator = new Elevator();
+                k_intake = new Intake();
 
-        b_resetDriveEncoders = new JoystickButton(k_driver, XboxController.Button.kB.value);
-        b_zeroElevator = new JoystickButton(k_driver, XboxController.Button.kY.value);
+                b_resetDriveEncoders = new JoystickButton(k_driver, XboxController.Button.kB.value);
+                b_zeroElevator = new JoystickButton(k_driver, XboxController.Button.kY.value);
 
-        k_drivetrain.setDefaultCommand(new ArcadeDrive(k_drivetrain, () -> k_driver.getYButtonPressed()));
-        k_elevator.setDefaultCommand(new DriveElevator(
-                k_elevator, () -> {
-                    return MathUtil.applyDeadband(k_driver.getRightTriggerAxis() - k_driver.getLeftTriggerAxis(), 0.1);
-                }, () -> k_operator.getAButton(), () -> k_operator.getBButton()));
+                k_drivetrain.setDefaultCommand(new ArcadeDrive(k_drivetrain, () -> k_driver.getYButtonPressed()));
+                k_elevator.setDefaultCommand(new DriveElevator(
+                                k_elevator, () -> {
+                                        return MathUtil.applyDeadband(
+                                                        k_driver.getRightTriggerAxis() - k_driver.getLeftTriggerAxis(),
+                                                        0.1);
+                                }, () -> k_operator.getAButton(), () -> k_operator.getBButton()));
 
-        k_intake.setDefaultCommand(new DriveIntake(
-                k_intake, () -> {
-                    return MathUtil.applyDeadband(k_operator.getRightTriggerAxis() - k_operator.getLeftTriggerAxis(),
-                            0.1);
-                }, () -> k_operator.getXButton()));
+                k_intake.setDefaultCommand(new DriveIntake(
+                                k_intake, () -> {
+                                        return MathUtil.applyDeadband(
+                                                        k_operator.getRightTriggerAxis()
+                                                                        - k_operator.getLeftTriggerAxis(),
+                                                        0.1);
+                                }, () -> k_operator.getXButton()));
 
-        configureButtonBindings();
-        configureAuto();
-    }
+                configureButtonBindings();
+                configureAuto();
+        }
 
-    private void configureButtonBindings() {
-        b_resetDriveEncoders.onTrue(new InstantCommand(() -> k_drivetrain.resetEncoders()));
-        b_zeroElevator.onTrue(new InstantCommand(() -> k_elevator.zeroElevator()));
-    }
+        private void configureButtonBindings() {
+                b_resetDriveEncoders.onTrue(new InstantCommand(() -> k_drivetrain.resetEncoders()));
+                b_zeroElevator.onTrue(new InstantCommand(() -> k_elevator.zeroElevator()));
+        }
 
-    private void configureAuto() {
+        private void configureAuto() {
 
-
-
-        PathPlannerTrajectory topBlue = PathPlanner.loadPath("Blue 1",
-                new PathConstraints(Constants.DriveConstants.kMaxSpeedMetersPerSecond,
-                        Constants.DriveConstants.kMaxAccelerationMetersPerSecondSquared),
-                true);
-        PathPlannerTrajectory middleBlue = PathPlanner.loadPath("Blue 2",
-                new PathConstraints(Constants.DriveConstants.kMaxSpeedMetersPerSecond,
-                        Constants.DriveConstants.kMaxAccelerationMetersPerSecondSquared),
-                true);
-        PathPlannerTrajectory NEWPATH = PathPlanner.loadPath("New Path",
-                new PathConstraints(Constants.DriveConstants.kMaxSpeedMetersPerSecond,
-                        Constants.DriveConstants.kMaxAccelerationMetersPerSecondSquared),
-                true);
+                PathPlannerTrajectory topBlue = PathPlanner.loadPath("Blue 1",
+                                new PathConstraints(Constants.DriveConstants.kMaxSpeedMetersPerSecond,
+                                                Constants.DriveConstants.kMaxAccelerationMetersPerSecondSquared),
+                                true);
+                PathPlannerTrajectory middleBlue = PathPlanner.loadPath("Blue 2",
+                                new PathConstraints(Constants.DriveConstants.kMaxSpeedMetersPerSecond,
+                                                Constants.DriveConstants.kMaxAccelerationMetersPerSecondSquared),
+                                true);
+                PathPlannerTrajectory NEWPATH = PathPlanner.loadPath("New Path",
+                                new PathConstraints(Constants.DriveConstants.kMaxSpeedMetersPerSecond,
+                                                Constants.DriveConstants.kMaxAccelerationMetersPerSecondSquared),
+                                true);
 
                 PathPlannerTrajectory RAMP = PathPlanner.loadPath("RampOrSomethingCoolLikeThat",
-                new PathConstraints(0.01,0.01),
-                false);
+                                new PathConstraints(0.01, 0.01),
+                                false);
 
-
-
-        PathPlannerTrajectory topRed = PathPlanner.loadPath("Red 1",
-                new PathConstraints(Constants.DriveConstants.kMaxSpeedMetersPerSecond,
-                        Constants.DriveConstants.kMaxAccelerationMetersPerSecondSquared),
-                true);
-        PathPlannerTrajectory middleRed = PathPlanner.loadPath("Red 2",
-                new PathConstraints(Constants.DriveConstants.kMaxSpeedMetersPerSecond,
-                        Constants.DriveConstants.kMaxAccelerationMetersPerSecondSquared),
-                true);
-        PathPlannerTrajectory bottomRed = PathPlanner.loadPath("Red 3",
-                new PathConstraints(Constants.DriveConstants.kMaxSpeedMetersPerSecond,
-                        Constants.DriveConstants.kMaxAccelerationMetersPerSecondSquared),
-                true);
-
+                PathPlannerTrajectory topRed = PathPlanner.loadPath("Red 1",
+                                new PathConstraints(Constants.DriveConstants.kMaxSpeedMetersPerSecond,
+                                                Constants.DriveConstants.kMaxAccelerationMetersPerSecondSquared),
+                                true);
+                PathPlannerTrajectory middleRed = PathPlanner.loadPath("Red 2",
+                                new PathConstraints(Constants.DriveConstants.kMaxSpeedMetersPerSecond,
+                                                Constants.DriveConstants.kMaxAccelerationMetersPerSecondSquared),
+                                true);
+                PathPlannerTrajectory bottomRed = PathPlanner.loadPath("Red 3",
+                                new PathConstraints(Constants.DriveConstants.kMaxSpeedMetersPerSecond,
+                                                Constants.DriveConstants.kMaxAccelerationMetersPerSecondSquared),
+                                true);
 
                 Command Ramp = new SequentialCommandGroup(
-                        new InstantCommand(() -> k_drivetrain.resetEncoders()),
-                        new ParallelCommandGroup(
-                                new DriveElevatorPosition(k_elevator, Constants.DriveConstants.kElevatorHighPosition))
-                                .withTimeout(3),
-                        new DriveIntakeSpeed(k_intake, 1).withTimeout(1),
-                        new DriveIntakeSpeed(k_intake, 0).withTimeout(0.1),
-                        new ParallelCommandGroup(
-                                new DriveElevatorPosition(k_elevator, 0)).withTimeout(3),
-                       // new ParallelCommandGroup(
-                       // new DriveElevatorPosition(k_elevator, 0),        
-                      // k_drivetrain.followTrajectoryCommand(RAMP, true)));
-                        new DriveTime(k_drivetrain, -0.4, 0).withTimeout(5),
-                        new DriveTime(k_drivetrain, 0.4, 0).withTimeout(1),
-                        new DriveTime(k_drivetrain, 0.2, 0).withTimeout(2.75));
-        
+                                new InstantCommand(() -> k_drivetrain.resetEncoders()),
+                                new ParallelCommandGroup(
+                                                new DriveElevatorPosition(k_elevator,
+                                                                Constants.DriveConstants.kElevatorHighPosition))
+                                                .withTimeout(3),
+                                new DriveIntakeSpeed(k_intake, 1).withTimeout(1),
+                                new DriveIntakeSpeed(k_intake, 0).withTimeout(0.1),
+                                new ParallelCommandGroup(
+                                                new DriveElevatorPosition(k_elevator, 0)).withTimeout(3),
+                                // new ParallelCommandGroup(
+                                // new DriveElevatorPosition(k_elevator, 0),
+                                // k_drivetrain.followTrajectoryCommand(RAMP, true)));
+                                new DriveTime(k_drivetrain, -0.4, 0).withTimeout(5),
+                                new DriveTime(k_drivetrain, 0.4, 0).withTimeout(1),
+                                new DriveTime(k_drivetrain, 0.2, 0).withTimeout(2.75));
 
-        Command driveBottomBlue = new SequentialCommandGroup(
-                new InstantCommand(() -> k_drivetrain.resetEncoders()),
-                new ParallelCommandGroup(
-                        new DriveElevatorPosition(k_elevator, Constants.DriveConstants.kElevatorHighPosition))
-                        .withTimeout(3),
-                new DriveIntakeSpeed(k_intake, 1).withTimeout(1),
-                new DriveIntakeSpeed(k_intake, 0).withTimeout(0.1),
-                new ParallelCommandGroup(
-                        new DriveElevatorPosition(k_elevator, 10)).withTimeout(3),
-                new ParallelCommandGroup(
-                new DriveElevatorPosition(k_elevator, 0),        
-                k_drivetrain.followTrajectoryCommand(NEWPATH, true)));
-        Command driveMiddleBlue = new SequentialCommandGroup(
-                new InstantCommand(() -> k_drivetrain.resetEncoders()),
-                new ParallelCommandGroup(
-                        new DriveElevatorPosition(k_elevator, Constants.DriveConstants.kElevatorHighPosition))
-                        .withTimeout(3),
-                new DriveIntakeSpeed(k_intake, 1).withTimeout(1),
-                new DriveIntakeSpeed(k_intake, 0).withTimeout(0.1),
-                new ParallelCommandGroup(
-                        new DriveElevatorPosition(k_elevator, 0),
-                        k_drivetrain.followTrajectoryCommand(middleBlue, true)));
-        Command driveTopBlue = new SequentialCommandGroup(
-                new InstantCommand(() -> k_drivetrain.resetEncoders()),
-                new ParallelCommandGroup(
-                        new DriveElevatorPosition(k_elevator, Constants.DriveConstants.kElevatorHighPosition))
-                        .withTimeout(3),
-                new DriveIntakeSpeed(k_intake, 1).withTimeout(1),
-                new DriveIntakeSpeed(k_intake, 0).withTimeout(0.1),
-                new ParallelCommandGroup(
-                        new DriveElevatorPosition(k_elevator, 0),
-                        k_drivetrain.followTrajectoryCommand(topBlue, true)));
+                Command RampPart2 = new SequentialCommandGroup(
+                                new InstantCommand(() -> k_drivetrain.resetEncoders()),
+                                new ParallelCommandGroup(
+                                                new DriveElevatorPosition(k_elevator,
+                                                                Constants.DriveConstants.kElevatorHighPosition))
+                                                .withTimeout(3),
+                                new DriveIntakeSpeed(k_intake, 1).withTimeout(.5),
+                                new DriveIntakeSpeed(k_intake, 0).withTimeout(0.1),
+                                new ParallelCommandGroup(
+                                                new DriveElevatorPosition(k_elevator, 0).withTimeout(3),
+                                                new DriveTime(k_drivetrain, -0.4, 0).withTimeout(3)),
+                                new AutoBalance(k_drivetrain, false));
 
-        Command driveBottomRed = new SequentialCommandGroup(
-                new InstantCommand(() -> k_drivetrain.resetEncoders()),
-                new ParallelCommandGroup(
-                        new DriveElevatorPosition(k_elevator, Constants.DriveConstants.kElevatorHighPosition))
-                        .withTimeout(3),
-                new DriveIntakeSpeed(k_intake, 1).withTimeout(1),
-                new DriveIntakeSpeed(k_intake, 0).withTimeout(0.1),
-                new ParallelCommandGroup(
-                        new DriveElevatorPosition(k_elevator, 0),
-                        k_drivetrain.followTrajectoryCommand(bottomRed, true)));
-        Command driveMiddleRed = new SequentialCommandGroup(
-                new InstantCommand(() -> k_drivetrain.resetEncoders()),
-                new ParallelCommandGroup(
-                        new DriveElevatorPosition(k_elevator, Constants.DriveConstants.kElevatorHighPosition))
-                        .withTimeout(3),
-                new DriveIntakeSpeed(k_intake, 1).withTimeout(1),
-                new DriveIntakeSpeed(k_intake, 0).withTimeout(0.1),
-                new ParallelCommandGroup(
-                        new DriveElevatorPosition(k_elevator, 0),
-                        k_drivetrain.followTrajectoryCommand(middleRed, true)));
-        Command driveTopRed = new SequentialCommandGroup(
-                new InstantCommand(() -> k_drivetrain.resetEncoders()),
-                new ParallelCommandGroup(
-                        new DriveElevatorPosition(k_elevator, Constants.DriveConstants.kElevatorHighPosition))
-                        .withTimeout(3),
-                new DriveIntakeSpeed(k_intake, 1).withTimeout(1),
-                new DriveIntakeSpeed(k_intake, 0).withTimeout(0.1),
-                new ParallelCommandGroup(
-                        new DriveElevatorPosition(k_elevator, 0),
-                        k_drivetrain.followTrajectoryCommand(topRed, true)));
+                Command driveBottomBlue = new SequentialCommandGroup(
+                                new InstantCommand(() -> k_drivetrain.resetEncoders()),
+                                new ParallelCommandGroup(
+                                                new DriveElevatorPosition(k_elevator,
+                                                                Constants.DriveConstants.kElevatorHighPosition))
+                                                .withTimeout(3),
+                                new DriveIntakeSpeed(k_intake, 1).withTimeout(1),
+                                new DriveIntakeSpeed(k_intake, 0).withTimeout(0.1),
+                                new ParallelCommandGroup(
+                                                new DriveElevatorPosition(k_elevator, 10)).withTimeout(3),
+                                new ParallelCommandGroup(
+                                                new DriveElevatorPosition(k_elevator, 0),
+                                                k_drivetrain.followTrajectoryCommand(NEWPATH, true)));
+                Command driveMiddleBlue = new SequentialCommandGroup(
+                                new InstantCommand(() -> k_drivetrain.resetEncoders()),
+                                new ParallelCommandGroup(
+                                                new DriveElevatorPosition(k_elevator,
+                                                                Constants.DriveConstants.kElevatorHighPosition))
+                                                .withTimeout(3),
+                                new DriveIntakeSpeed(k_intake, 1).withTimeout(1),
+                                new DriveIntakeSpeed(k_intake, 0).withTimeout(0.1),
+                                new ParallelCommandGroup(
+                                                new DriveElevatorPosition(k_elevator, 0),
+                                                k_drivetrain.followTrajectoryCommand(middleBlue, true)));
+                Command driveTopBlue = new SequentialCommandGroup(
+                                new InstantCommand(() -> k_drivetrain.resetEncoders()),
+                                new ParallelCommandGroup(
+                                                new DriveElevatorPosition(k_elevator,
+                                                                Constants.DriveConstants.kElevatorHighPosition))
+                                                .withTimeout(3),
+                                new DriveIntakeSpeed(k_intake, 1).withTimeout(1),
+                                new DriveIntakeSpeed(k_intake, 0).withTimeout(0.1),
+                                new ParallelCommandGroup(
+                                                new DriveElevatorPosition(k_elevator, 0),
+                                                k_drivetrain.followTrajectoryCommand(topBlue, true)));
 
-        // Add commands to the autonomous command chooser
-        m_chooser.setDefaultOption("None", null);
-        m_chooser.addOption("Top Blue", driveTopBlue);
-        m_chooser.addOption("Middle Blue", driveMiddleBlue);
-        m_chooser.addOption("THIS ONE", driveBottomBlue);
-        m_chooser.addOption("Top Red", driveTopRed);
-        m_chooser.addOption("Middle Red", driveMiddleRed);
-        m_chooser.addOption("Bottom Red", driveBottomRed);
-        m_chooser.addOption("RAMP!!!!!", Ramp);
+                Command driveBottomRed = new SequentialCommandGroup(
+                                new InstantCommand(() -> k_drivetrain.resetEncoders()),
+                                new ParallelCommandGroup(
+                                                new DriveElevatorPosition(k_elevator,
+                                                                Constants.DriveConstants.kElevatorHighPosition))
+                                                .withTimeout(3),
+                                new DriveIntakeSpeed(k_intake, 1).withTimeout(1),
+                                new DriveIntakeSpeed(k_intake, 0).withTimeout(0.1),
+                                new ParallelCommandGroup(
+                                                new DriveElevatorPosition(k_elevator, 0),
+                                                k_drivetrain.followTrajectoryCommand(bottomRed, true)));
+                Command driveMiddleRed = new SequentialCommandGroup(
+                                new InstantCommand(() -> k_drivetrain.resetEncoders()),
+                                new ParallelCommandGroup(
+                                                new DriveElevatorPosition(k_elevator,
+                                                                Constants.DriveConstants.kElevatorHighPosition))
+                                                .withTimeout(3),
+                                new DriveIntakeSpeed(k_intake, 1).withTimeout(1),
+                                new DriveIntakeSpeed(k_intake, 0).withTimeout(0.1),
+                                new ParallelCommandGroup(
+                                                new DriveElevatorPosition(k_elevator, 0),
+                                                k_drivetrain.followTrajectoryCommand(middleRed, true)));
+                Command driveTopRed = new SequentialCommandGroup(
+                                new InstantCommand(() -> k_drivetrain.resetEncoders()),
+                                new ParallelCommandGroup(
+                                                new DriveElevatorPosition(k_elevator,
+                                                                Constants.DriveConstants.kElevatorHighPosition))
+                                                .withTimeout(3),
+                                new DriveIntakeSpeed(k_intake, 1).withTimeout(1),
+                                new DriveIntakeSpeed(k_intake, 0).withTimeout(0.1),
+                                new ParallelCommandGroup(
+                                                new DriveElevatorPosition(k_elevator, 0),
+                                                k_drivetrain.followTrajectoryCommand(topRed, true)));
 
-        // Put the chooser on the dashboard
-        SmartDashboard.putData(m_chooser);
-    }
+                // Add commands to the autonomous command chooser
+                m_chooser.setDefaultOption("None", null);
+                m_chooser.addOption("Top Blue", driveTopBlue);
+                m_chooser.addOption("Middle Blue", driveMiddleBlue);
+                m_chooser.addOption("THIS ONE", driveBottomBlue);
+                m_chooser.addOption("Top Red", driveTopRed);
+                m_chooser.addOption("Middle Red", driveMiddleRed);
+                m_chooser.addOption("Bottom Red", driveBottomRed);
+                m_chooser.addOption("RAMP!!!!!", Ramp);
+                m_chooser.addOption("RAMP PART 2!!!!", RampPart2);
 
-    /**
-     * Use this to pass the autonomous command to the main {@link Robot} class.
-     *
-     * @return the command to run in autonomous
-     */
-    public Command getAutonomousCommand() {
-        return m_chooser.getSelected();
-    }
+                // Put the chooser on the dashboard
+                SmartDashboard.putData(m_chooser);
+        }
+
+        /**
+         * Use this to pass the autonomous command to the main {@link Robot} class.
+         *
+         * @return the command to run in autonomous
+         */
+        public Command getAutonomousCommand() {
+                return m_chooser.getSelected();
+        }
 }
